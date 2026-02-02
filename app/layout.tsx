@@ -1,5 +1,7 @@
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+export const runtime = "nodejs";
+
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
