@@ -7,53 +7,24 @@ export const orderType = defineType({
   type: "document",
   icon: BasketIcon,
 
-  // give new docs sensible defaults in Studio
-  initialValue: () => ({
-    createdAt: new Date().toISOString(),
-    default: false,
-  }),
-
   fields: [
+    // ✅ Order ID
     defineField({
       name: "orderNumber",
-      title: "Order Number",
+      title: "Order ID",
       type: "string",
       validation: (Rule) => Rule.required(),
     }),
 
-    // Razorpay Invoice (optional)
-    {
-      name: "invoice",
-      type: "object",
-      fields: [
-        { name: "id", type: "string" },
-        { name: "number", type: "string" },
-        { name: "hosted_invoice_url", type: "url" },
-      ],
-    },
-
-    // 🔄 Replaced Stripe Checkout Session → Razorpay Payment Link ID
+    // ✅ Order Date
     defineField({
-      name: "razorpayPaymentLinkId",
-      title: "Razorpay Payment Link ID",
-      type: "string",
-    }),
-
-    // 🔄 Stripe Customer ID → Razorpay Customer ID
-    defineField({
-      name: "razorpayCustomerId",
-      title: "Razorpay Customer ID",
-      type: "string",
-      description: "Optional — Payment Links do not create Razorpay customers.",
-    }),
-
-    defineField({
-      name: "clerkUserId",
-      title: "Store User ID",
-      type: "string",
+      name: "orderDate",
+      title: "Order Date",
+      type: "datetime",
       validation: (Rule) => Rule.required(),
     }),
 
+    // ✅ Customer Info
     defineField({
       name: "customerName",
       title: "Customer Name",
@@ -68,14 +39,13 @@ export const orderType = defineType({
       validation: (Rule) => Rule.required().email(),
     }),
 
-    // 🔄 Stripe Payment Intent ID → Razorpay Payment ID (captured)
     defineField({
-      name: "razorpayPaymentId",
-      title: "Razorpay Payment ID",
+      name: "phone",
+      title: "Customer Phone",
       type: "string",
-      validation: (Rule) => Rule.required(),
     }),
 
+    // ✅ Products
     defineField({
       name: "products",
       title: "Products",
@@ -86,34 +56,53 @@ export const orderType = defineType({
           fields: [
             defineField({
               name: "product",
-              title: "Product Bought",
+              title: "Product",
               type: "reference",
               to: [{ type: "product" }],
             }),
             defineField({
               name: "quantity",
-              title: "Quantity Purchased",
+              title: "Quantity",
               type: "number",
             }),
           ],
           preview: {
             select: {
-              product: "product.name",
+              name: "product.name",
               quantity: "quantity",
-              image: "product.image",
               price: "product.price",
-              currency: "product.currency",
+              image: "product.images.0",
             },
-            prepare(select) {
+            prepare(selection) {
+              const { name, quantity, price, image } = selection;
               return {
-                title: `${select.product} x ${select.quantity}`,
-                subtitle: `${select.price * select.quantity}`,
-                media: select.image,
+                title: `${name} x ${quantity}`,
+                subtitle: `₹${price * quantity}`,
+                media: image,
               };
             },
           },
         }),
       ],
+    }),
+
+    // ✅ Pricing
+    defineField({
+      name: "subtotal",
+      title: "Subtotal",
+      type: "number",
+    }),
+
+    defineField({
+      name: "shipping",
+      title: "Shipping",
+      type: "number",
+    }),
+
+    defineField({
+      name: "couponDiscount",
+      title: "Coupon Discount",
+      type: "number",
     }),
 
     defineField({
@@ -127,74 +116,54 @@ export const orderType = defineType({
       name: "currency",
       title: "Currency",
       type: "string",
-      validation: (Rule) => Rule.required(),
+      initialValue: "INR",
     }),
 
-    defineField({
-      name: "amountDiscount",
-      title: "Amount Discount",
-      type: "number",
-      validation: (Rule) => Rule.required(),
-    }),
-
+    // ✅ Address
     defineField({
       name: "address",
       title: "Shipping Address",
       type: "object",
       fields: [
+        defineField({ name: "name", title: "Name", type: "string" }),
+        defineField({ name: "address", title: "Address", type: "string" }),
+        defineField({ name: "city", title: "City", type: "string" }),
         defineField({ name: "state", title: "State", type: "string" }),
         defineField({ name: "zip", title: "Zip Code", type: "string" }),
-        defineField({ name: "city", title: "City", type: "string" }),
-        defineField({ name: "address", title: "Address", type: "string" }),
-        defineField({ name: "name", title: "Name", type: "string" }),
       ],
     }),
 
+    // ✅ Order Status (for admin management)
     defineField({
       name: "status",
       title: "Order Status",
       type: "string",
+      initialValue: "pending",
       options: {
         list: [
-          { title: "Pending", value: "pending" },
+          { title: "Pending Confirmation", value: "pending" },
+          { title: "Confirmed", value: "confirmed" },
           { title: "Processing", value: "processing" },
-          { title: "Paid", value: "paid" },
           { title: "Shipped", value: "shipped" },
-          { title: "Out for Delivery", value: "out_for_delivery" },
           { title: "Delivered", value: "delivered" },
           { title: "Cancelled", value: "cancelled" },
         ],
       },
     }),
 
+    // ✅ Payment Method (now always WhatsApp)
     defineField({
-      name: "orderDate",
-      title: "Order Date",
-      type: "datetime",
-      validation: (Rule) => Rule.required(),
+      name: "paymentMethod",
+      title: "Payment Method",
+      type: "string",
+      initialValue: "WhatsApp",
     }),
 
-    // === Added fields to match existing documents in dataset ===
     defineField({
       name: "createdAt",
-      title: "Created at",
+      title: "Created At",
       type: "datetime",
-      description: "When the order was created (ISO 8601 datetime).",
-      options: {
-        dateFormat: "YYYY-MM-DD",
-        timeFormat: "HH:mm:ss",
-        timeStep: 15,
-      },
-      // not required to allow backfilled docs, but you can add validation if you want
-    }),
-
-    defineField({
-      name: "default",
-      title: "Default",
-      type: "boolean",
-      description:
-        "Legacy field that existed in some documents. Keep only if your backend depends on it.",
-      initialValue: false,
+      initialValue: () => new Date().toISOString(),
     }),
   ],
 
@@ -202,15 +171,13 @@ export const orderType = defineType({
     select: {
       name: "customerName",
       amount: "totalPrice",
-      currency: "currency",
       orderId: "orderNumber",
-      email: "email",
+      status: "status",
     },
     prepare(select) {
-      const orderIdSnippet = `${select.orderId.slice(0, 5)}...${select.orderId.slice(-5)}`;
       return {
-        title: `${select.name} (${orderIdSnippet})`,
-        subtitle: `${select.amount} ${select.currency}, ${select.email}`,
+        title: `${select.name} (${select.orderId})`,
+        subtitle: `₹${select.amount} • ${select.status}`,
         media: BasketIcon,
       };
     },

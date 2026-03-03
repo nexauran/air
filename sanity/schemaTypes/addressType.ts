@@ -15,6 +15,12 @@ export const addressType = defineType({
       validation: (Rule) => Rule.required().max(50),
     }),
     defineField({
+  name: "phone",
+  title: "Phone Number",
+  type: "string",
+  validation: (Rule) => Rule.required(),
+}),
+    defineField({
       name: "email",
       title: "User Email",
       type: "email",

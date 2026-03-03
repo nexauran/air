@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     const {
       name,
       email,
+      phone, // ✅ Added
       address,
       city,
       state,
@@ -23,11 +24,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
 
-    // create address document (annotate created to ensure we have _id)
+    if (!phone) {
+      return NextResponse.json({ error: "Phone number required" }, { status: 400 });
+    }
+
     const created: { _id: string } = await sanity.create({
       _type: "address",
       name,
       email,
+      phone, // ✅ Save phone
       address,
       city,
       state,
@@ -36,15 +41,13 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     });
 
-    // if default = true, unset others
+    // If default = true → unset others
     if (isDefault) {
-      // 1. Find all other default addresses for the same email
       const others = await sanity.fetch<AddressDoc[]>(
         `*[_type == "address" && email == $email && _id != $id && default == true]{ _id }`,
         { email, id: created._id }
       );
 
-      // 2. Remove default from all of them
       await Promise.all(
         others.map((addr: AddressDoc) =>
           sanity

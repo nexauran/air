@@ -51,18 +51,27 @@ const OrdersComponent = ({ orders }: { orders: MY_ORDERS_QUERYResult }) => {
                     />
                   </TableCell>
                   <TableCell>
-                    {order?.status && (
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          order.status === "paid"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {order?.status.charAt(0).toUpperCase() +
-                          order?.status.slice(1)}
-                      </span>
-                    )}
+                   {order?.status && (
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      order.status === "pending"
+        ? "bg-yellow-100 text-yellow-700"
+        : order.status === "processing"
+        ? "bg-blue-100 text-blue-700"
+        : order.status === "paid"
+        ? "bg-emerald-100 text-emerald-700"
+        : order.status === "shipped"
+        ? "bg-purple-100 text-purple-700"
+        : order.status === "delivered"
+        ? "bg-green-100 text-green-700"
+        : order.status === "cancelled"
+        ? "bg-red-100 text-red-700"
+        : "bg-gray-100 text-gray-700"
+    }`}
+  >
+    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+  </span>
+)}
                   </TableCell>
 
                   <TableCell className="hidden sm:table-cell">

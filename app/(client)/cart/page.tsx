@@ -3,7 +3,7 @@
 // app/(path-to)/CartPage.tsx
 "use client";
 import { ChevronUp, ChevronDown } from "lucide-react";
-
+import { MessageCircle } from "lucide-react";
 import Container from "@/components/Container";
 import EmptyCart from "@/components/EmptyCart";
 import NoAccessToCart from "@/components/NoAccessToCart";
@@ -37,6 +37,7 @@ import AddAddressModal from "@/components/AddAddressModal";
 type AddressDoc = {
   _id?: string;
   name?: string;
+   phone?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -119,7 +120,7 @@ function normalizeFreeItemToProduct(fi: any, idx: number) {
  */
 function upsertNormalizedFreeItemsFactory(
   useStoreHook: any,
-  toastFn: (msg: string) => void
+  toastFn: (msg: string) => void,
 ) {
   return function upsertNormalizedFreeItems(normalizedForStore: any[]) {
     const storeAny: any = useStoreHook as any;
@@ -137,7 +138,7 @@ function upsertNormalizedFreeItemsFactory(
         (prev as ItemShape[]).map((it) => [
           it.product._id ?? (it.product as any).id,
           it,
-        ])
+        ]),
       );
 
       for (const p of normalizedForStore) {
@@ -185,7 +186,7 @@ function upsertNormalizedFreeItemsFactory(
           (prev as ItemShape[]).map((it) => [
             it.product._id ?? (it.product as any).id,
             it,
-          ])
+          ]),
         );
         for (const p of normalizedForStore) {
           const key = p._id ?? p.id;
@@ -205,11 +206,11 @@ function upsertNormalizedFreeItemsFactory(
 
     // Otherwise, nothing worked — show a message
     toastFn(
-      `Coupon applied — server provided ${normalizedForStore.length} free item(s). Please refresh if they're not visible.`
+      `Coupon applied — server provided ${normalizedForStore.length} free item(s). Please refresh if they're not visible.`,
     );
     console.warn(
       "Could not programmatically add normalized free items:",
-      normalizedForStore
+      normalizedForStore,
     );
   };
 }
@@ -288,7 +289,7 @@ const CartPage: React.FC = () => {
   const { user } = useUser();
   const [addresses, setAddresses] = useState<AddressDoc[] | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<AddressDoc | null>(
-    null
+    null,
   );
 
   // controlled radio value
@@ -349,7 +350,7 @@ const CartPage: React.FC = () => {
 
   const handleResetCart = () => {
     const confirmed = window.confirm(
-      "Are you sure you want to reset your cart?"
+      "Are you sure you want to reset your cart?",
     );
     if (confirmed) {
       resetCart();
@@ -357,29 +358,13 @@ const CartPage: React.FC = () => {
     }
   };
 
-  async function loadRazorpayScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(
-        "script[src='https://checkout.razorpay.com/v1/checkout.js']"
-      );
-      if (existing) return resolve();
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
-      document.body.appendChild(script);
-    });
-  }
-
   // --------- Coupon state & helpers ----------
   const [couponCode, setCouponCode] = useState<string>("");
   const [couponApplying, setCouponApplying] = useState<boolean>(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
-    null
+    null,
   );
   const [couponError, setCouponError] = useState<string | null>(null);
-  
 
   const displaySubTotal = getSubTotalPrice();
   const displayProductsTotal = getTotalPrice(); // assume product-level discounts (not coupon) are already applied here
@@ -391,36 +376,37 @@ const CartPage: React.FC = () => {
 
   // Final total used for checkout (products + shipping - coupon)
   const displayFinalTotal = Math.round(
-    (displayProductsTotal ?? 0) + displayShipping - couponDiscountTotal
+    (displayProductsTotal ?? 0) + displayShipping - couponDiscountTotal,
   );
 
   // factory for upsert helper bound to our store and toast
   const upsertNormalizedFreeItems = upsertNormalizedFreeItemsFactory(
     useStore,
-    (m: string) => toast.success(m)
+    (m: string) => toast.success(m),
   );
   // NEW: Available Coupons state
-const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
-const [loadingCoupons, setLoadingCoupons] = useState(false);
-const [showCoupons, setShowCoupons] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [showCoupons, setShowCoupons] = useState(false);
 
-// Fetch available coupons automatically
-useEffect(() => {
-  async function load() {
-    setLoadingCoupons(true);
-    try {
-      const res = await fetch(`/api/available-coupons?cartTotal=${displayProductsTotal}`);
-      const data = await res.json();
-      setAvailableCoupons(data.coupons || []);
-    } catch (err) {
-      console.log("coupon list error:", err);
+  // Fetch available coupons automatically
+  useEffect(() => {
+    async function load() {
+      setLoadingCoupons(true);
+      try {
+        const res = await fetch(
+          `/api/available-coupons?cartTotal=${displayProductsTotal}`,
+        );
+        const data = await res.json();
+        setAvailableCoupons(data.coupons || []);
+      } catch (err) {
+        console.log("coupon list error:", err);
+      }
+      setLoadingCoupons(false);
     }
-    setLoadingCoupons(false);
-  }
 
-  if (displayProductsTotal > 0) load();
-}, [displayProductsTotal]);
-
+    if (displayProductsTotal > 0) load();
+  }, [displayProductsTotal]);
 
   // Apply coupon using App Router route /api/apply-coupon (this route should return {discount, newTotal, code, freeItems?})
   const handleApplyCoupon = async () => {
@@ -469,7 +455,7 @@ useEffect(() => {
       const minCartValue: number | null = vJson.minCartValue ?? null;
       if (minCartValue !== null && productsTotal < Number(minCartValue)) {
         setCouponError(
-          `This coupon requires products amount of at least ₹${minCartValue}. Your current products amount is ₹${productsTotal}.`
+          `This coupon requires products amount of at least ₹${minCartValue}. Your current products amount is ₹${productsTotal}.`,
         );
         setAppliedCoupon(null);
         setCouponApplying(false);
@@ -512,7 +498,7 @@ useEffect(() => {
         } catch (errAdd: any) {
           console.error("Error adding free items to store:", errAdd);
           toast.success(
-            `Coupon applied — free items returned by server. Please refresh to see them.`
+            `Coupon applied — free items returned by server. Please refresh to see them.`,
           );
         }
 
@@ -523,7 +509,7 @@ useEffect(() => {
           if (typeof storeAny.getState === "function") {
             console.log(
               "store.getState().items (after add):",
-              storeAny.getState().items
+              storeAny.getState().items,
             );
           }
           console.log("local groupedItems selector (current):", groupedItems);
@@ -545,8 +531,6 @@ useEffect(() => {
         return;
       }
 
-      
-
       // no free items — regular coupon
       const applied: AppliedCoupon = {
         success: true,
@@ -558,7 +542,7 @@ useEffect(() => {
       setAppliedCoupon(applied);
       setCouponError(null);
       toast.success(
-        `Coupon ${applied.code} applied — saved ${applied.discount}`
+        `Coupon ${applied.code} applied — saved ${applied.discount}`,
       );
     } catch (err: any) {
       console.error("apply coupon error:", err);
@@ -668,7 +652,7 @@ useEffect(() => {
         toast.success("Coupon removed from cart");
       } else {
         toast(
-          "Coupon removed. Free items may still be present — refresh to update cart."
+          "Coupon removed. Free items may still be present — refresh to update cart.",
         );
       }
     } catch (err) {
@@ -678,7 +662,7 @@ useEffect(() => {
       setCouponCode("");
       setCouponError(null);
       toast.error(
-        "Coupon removed, but removing free items failed. Check console."
+        "Coupon removed, but removing free items failed. Check console.",
       );
     }
   };
@@ -695,246 +679,182 @@ useEffect(() => {
   const [loading, setLoading] = useState(false);
 
   const handleProceedToCheckout = async () => {
-    try {
-      if (!selectedAddressId || !selectedAddress) {
-        toast.error("Please add or select a delivery address before checkout.");
-        return;
-      }
+  try {
+    if (loading) return;
 
-      setLoading(true);
+    if (!selectedAddressId || !selectedAddress) {
+      toast.error("Please add or select a delivery address before checkout.");
+      return;
+    }
 
-      let idempotencyKey =
-        typeof window !== "undefined" ?
-          sessionStorage.getItem("checkout_idempotency_key")
-        : null;
-      if (!idempotencyKey) {
-        idempotencyKey = makeClientUUID();
-        try {
-          sessionStorage.setItem("checkout_idempotency_key", idempotencyKey);
-        } catch (e) {
-          // ignore storage failures
-        }
-      }
+    if (!groupedItems || groupedItems.length === 0) {
+      toast.error("Cart is empty.");
+      return;
+    }
 
-      const itemsPayload = (groupedItems ?? []).map(({ product }) => {
-        const qty = (product?._id ? getItemCount(product._id) : 1) || 1;
-        return {
-          product: { _ref: product?._id ?? "" },
-          quantity: qty,
-        };
-      });
+    setLoading(true);
 
-      const subtotal = getSubTotalPrice();
-      const shippingCharge = computeShipping(subtotal);
-      const productsTotal = getTotalPrice();
-      const finalTotal = Math.round(
-        (productsTotal ?? 0) + shippingCharge - couponDiscountTotal
-      );
+    // 🔥 Generate Order ID
+    const randomCode = Math.random()
+      .toString(36)
+      .substring(2, 7)
+      .toUpperCase();
+    const orderId = `ORD-${randomCode}`;
+    const orderDate = new Date().toISOString();
 
-      if (!finalTotal || finalTotal <= 0) {
-        toast.error("Cart is empty or invalid total.");
-        setLoading(false);
-        return;
-      }
+    const clerkUserId = user?.id;
 
-      const customerName =
-        (user &&
-          (user.fullName ??
-            `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim())) ||
-        selectedAddress?.name ||
-        "";
+    const customerName =
+      (user &&
+        (user.fullName ??
+          `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim())) ||
+      selectedAddress?.name ||
+      "";
 
-      const customerEmail = getUserEmail(user) ?? "";
-      const customerPhone = getUserPhone(user) ?? "";
+    const customerEmail = getUserEmail(user) ?? "";
 
-      if (!customerName || !customerEmail) {
-        toast.error(
-          "Please make sure your name and email are available (login or add address)."
-        );
-        setLoading(false);
-        return;
-      }
+    // ✅ FIXED PHONE SOURCE
+    const customerPhone =
+      selectedAddress?.phone ||
+      getUserPhone(user) ||
+      "";
 
-      // 1) Create order in your system (Sanity draft)
-      const createBody: any = {
-        customerName,
-        email: customerEmail,
-        clerkUserId: (user as any)?.id ?? (user as any)?.userId ?? "unknown",
-        products: itemsPayload,
-        address: selectedAddress ?? {},
-        subtotal: subtotal,
-        shippingCharge: shippingCharge,
-        totalPrice: finalTotal,
-        currency: "INR",
-        amountDiscount: Number(getSubTotalPrice() - getTotalPrice() || 0), // product-level discounts
-      };
-
-      // attach coupon metadata if applied
-      if (appliedCoupon) {
-        createBody.coupon = {
-          code: appliedCoupon.code,
-          amount: appliedCoupon.discount,
-        };
-        // include coupon discount in amountDiscount as well (to help audits)
-        createBody.amountDiscount =
-          Number(createBody.amountDiscount || 0) +
-          Number(appliedCoupon.discount || 0);
-      }
-
-      const createRes = await fetch("/api/orders/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "idempotency-key": idempotencyKey,
-        },
-        body: JSON.stringify(createBody),
-      });
-
-      const createJson: any = await createRes.json();
-      console.log("create order response:", createJson);
-
-      if (!createJson?.orderNumber) {
-        console.error("Order creation failed:", createJson);
-        toast.error("Failed to create order. Try again.");
-        setLoading(false);
-        return;
-      }
-
-      const orderNumber = createJson.orderNumber;
-
-      // 2) Request a Razorpay Order from your server.
-      const createRzpRes = await fetch("/api/razorpay/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber,
-          amount: finalTotal, // include shipping and coupon adjustments
-          currency: "INR",
-        }),
-      });
-
-      const rzpJson: any = await createRzpRes.json();
-      console.log("razorpay create-order response:", rzpJson);
-
-      if (!rzpJson?.id || !rzpJson?.keyId) {
-        if (
-          createJson.razorpayOrder &&
-          createJson.razorpayOrder.id &&
-          createJson.razorpayOrder.keyId
-        ) {
-          rzpJson.id = createJson.razorpayOrder.id;
-          rzpJson.amount = createJson.razorpayOrder.amount ?? finalTotal;
-          rzpJson.currency = createJson.razorpayOrder.currency ?? "INR";
-          rzpJson.keyId = createJson.razorpayOrder.keyId;
-        } else {
-          console.error("Failed to obtain Razorpay order id:", rzpJson);
-          toast.error("Failed to initiate payment. Try again.");
-          setLoading(false);
-          return;
-        }
-      }
-
-      // 3) Load Razorpay SDK
-      try {
-        await loadRazorpayScript();
-      } catch (err) {
-        console.error("Failed to load Razorpay script", err);
-        toast.error("Payment SDK failed to load.");
-        setLoading(false);
-        return;
-      }
-
-      // 4) Open Razorpay Checkout
-      const options: any = {
-        key: rzpJson.keyId,
-        amount: rzpJson.amount ?? finalTotal,
-        currency: rzpJson.currency ?? "INR",
-        name: "Your Shop",
-        description: `Order ${orderNumber}`,
-        order_id: rzpJson.id,
-        prefill: {
-          name: customerName,
-          email: customerEmail,
-          contact: customerPhone ?? "",
-        },
-        handler: async function (response: any) {
-          try {
-            setLoading(true);
-
-            const verifyRes = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                orderNumber,
-              }),
-            });
-
-            const verifyJson: any = await verifyRes.json();
-            console.log("verify response:", verifyJson);
-
-            if (verifyRes.ok && verifyJson.ok) {
-              try {
-                sessionStorage.removeItem("checkout_idempotency_key");
-              } catch {}
-              resetCart();
-              toast.success("Payment verified — order confirmed!");
-              router.push(
-                `/order/confirm?orderNumber=${encodeURIComponent(orderNumber)}`
-              );
-            } else {
-              console.error("Payment verification failed:", verifyJson);
-              toast.error(
-                verifyJson?.message || "Payment verification failed."
-              );
-              router.push(
-                `/order/confirm?orderNumber=${encodeURIComponent(orderNumber)}&status=failed`
-              );
-            }
-          } catch (err: unknown) {
-            console.error("verification error:", err);
-            toast.error("Payment verification error.");
-            router.push(
-              `/order/confirm?orderNumber=${encodeURIComponent(orderNumber)}&status=error`
-            );
-          } finally {
-            setLoading(false);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            console.log("Razorpay modal closed by user.");
-          },
-        },
-        theme: { color: "#F37254" },
-      };
-
-      // @ts-ignore
-      const rzp = new (window as any).Razorpay(options);
-
-      rzp.on &&
-        rzp.on("payment.failed", function (response: any) {
-          console.error("payment.failed", response);
-          toast.error("Payment failed or cancelled.");
-          router.push(
-            `/order/confirm?orderNumber=${encodeURIComponent(orderNumber)}&status=failed`
-          );
-        });
-
-      rzp.open();
-
+    if (!customerPhone) {
+      toast.error("Phone number is required before checkout.");
       setLoading(false);
       return;
-    } catch (err: unknown) {
-      console.error("checkout error:", err);
-      toast.error((err as any)?.message || "Checkout failed");
-      setLoading(false);
     }
-  };
 
-  
+    const subtotal = getSubTotalPrice();
+    const shippingCharge = computeShipping(subtotal);
+    const productsTotal = getTotalPrice();
+
+    const finalTotal = Math.round(
+      (productsTotal ?? 0) + shippingCharge - couponDiscountTotal
+    );
+
+    if (!finalTotal || finalTotal <= 0) {
+      toast.error("Invalid total amount.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Prepare Products for Sanity
+    const productsForSanity = groupedItems.map(({ product }) => ({
+      _key: product?._id,
+      product: {
+        _type: "reference",
+        _ref: product?._id,
+      },
+      quantity: getItemCount(product?._id ?? "") || 1,
+    }));
+
+    // ✅ Save Order
+    const saveRes = await fetch("/api/whatsapp-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        orderDate,
+        clerkUserId,
+        customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        address: selectedAddress,
+        products: productsForSanity,
+        subtotal,
+        shipping: shippingCharge,
+        couponDiscount: couponDiscountTotal,
+        total: finalTotal,
+        status: "pending",
+        paymentMethod: "WhatsApp",
+      }),
+    });
+
+    if (!saveRes.ok) {
+      const errorText = await saveRes.text();
+      console.error("Order save failed:", errorText);
+      toast.error("Failed to save order.");
+      setLoading(false);
+      return;
+    }
+
+    const saveJson = await saveRes.json();
+
+    if (!saveJson.success) {
+      toast.error("Failed to save order.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ PROFESSIONAL WHATSAPP MESSAGE (CLEAN FORMAT)
+    let message = `
+🧾 NEW ORDER RECEIVED
+━━━━━━━━━━━━━━━━━━
+
+Order Details
+Order ID: ${orderId}
+Order Date: ${new Date(orderDate).toLocaleString("en-IN")}
+
+Customer Information
+Name: ${customerName}
+Phone: ${customerPhone}
+Email: ${customerEmail}
+
+Delivery Address
+${selectedAddress?.name || ""}
+${selectedAddress?.address}
+${selectedAddress?.city}, ${selectedAddress?.state} - ${selectedAddress?.zip}
+
+Order Summary
+━━━━━━━━━━━━━━━━━━
+`;
+
+    groupedItems.forEach(({ product }) => {
+      const qty = getItemCount(product?._id ?? "") || 1;
+      const price = product?.price ?? 0;
+      const itemTotal = price * qty;
+
+      message += `
+${product?.name}
+Qty: ${qty} × ₹${price}
+Line Total: ₹${itemTotal}
+`;
+    });
+
+    message += `
+━━━━━━━━━━━━━━━━━━
+Subtotal: ₹${subtotal}
+Discount: -₹${couponDiscountTotal}
+Shipping: ₹${shippingCharge}
+━━━━━━━━━━━━━━━━━━
+Grand Total: ₹${finalTotal}
+
+Kindly confirm this order and proceed with processing.
+Thank you.
+`;
+
+    const phoneNumber = "919495217987"; // your business WhatsApp number
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    // ✅ Open WhatsApp
+    window.open(whatsappURL, "_blank");
+
+    // ✅ Clear Cart
+    resetCart();
+
+    // ✅ Redirect
+    router.push(`/order/confirm?orderNumber=${orderId}`);
+
+    setLoading(false);
+  } catch (err: any) {
+    console.error("Checkout error:", err);
+    toast.error("Checkout failed.");
+    setLoading(false);
+  }
+};
 
   return (
     <div className="bg-gray-50 pb-52 md:pb-10">
@@ -1062,7 +982,7 @@ useEffect(() => {
                                         onClick={() => {
                                           deleteCartProduct(product?._id ?? "");
                                           toast.success(
-                                            "Product deleted successfully!"
+                                            "Product deleted successfully!",
                                           );
                                         }}
                                         className="w-4 h-4 md:w-5 md:h-5 mr-1 text-gray-500 hover:text-red-600 hoverEffect"
@@ -1098,65 +1018,67 @@ useEffect(() => {
                       );
                     })}
                     {/* NEW: AVAILABLE COUPONS SECTION (C1 placement) */}
-<div className="border-t p-4">
-  <button
-    onClick={() => setShowCoupons((prev) => !prev)}
-    className="w-full flex items-center justify-between font-semibold text-left"
-  >
-    <span>Available Coupons</span>
-    {showCoupons ? (
-      <ChevronUp className="w-5 h-5" />
-    ) : (
-      <ChevronDown className="w-5 h-5" />
-    )}
-  </button>
+                    <div className="border-t p-4">
+                      <button
+                        onClick={() => setShowCoupons((prev) => !prev)}
+                        className="w-full flex items-center justify-between font-semibold text-left"
+                      >
+                        <span>Available Coupons</span>
+                        {showCoupons ?
+                          <ChevronUp className="w-5 h-5" />
+                        : <ChevronDown className="w-5 h-5" />}
+                      </button>
 
-  {showCoupons && (
-    <div className="mt-3 bg-gray-50 rounded-md p-3 border">
-      {loadingCoupons ? (
-        <p className="text-sm text-gray-500">Loading offers…</p>
-      ) : availableCoupons.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No available coupons right now
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {availableCoupons.map((c: any, idx) => (
-            <div
-              key={idx}
-              className="flex items-center justify-between bg-white p-2 border rounded-md"
-            >
-              <div>
-                <p className="font-semibold text-sm">{c.code}</p>
-                {c.description && (
-                  <p className="text-xs text-gray-600">{c.description}</p>
-                )}
-                {c.minimumCartValue && (
-                  <p className="text-[11px] text-gray-500">
-                    Min cart: ₹{c.minimumCartValue}
-                  </p>
-                )}
-              </div>
+                      {showCoupons && (
+                        <div className="mt-3 bg-gray-50 rounded-md p-3 border">
+                          {loadingCoupons ?
+                            <p className="text-sm text-gray-500">
+                              Loading offers…
+                            </p>
+                          : availableCoupons.length === 0 ?
+                            <p className="text-sm text-gray-500">
+                              No available coupons right now
+                            </p>
+                          : <div className="space-y-2">
+                              {availableCoupons.map((c: any, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between bg-white p-2 border rounded-md"
+                                >
+                                  <div>
+                                    <p className="font-semibold text-sm">
+                                      {c.code}
+                                    </p>
+                                    {c.description && (
+                                      <p className="text-xs text-gray-600">
+                                        {c.description}
+                                      </p>
+                                    )}
+                                    {c.minimumCartValue && (
+                                      <p className="text-[11px] text-gray-500">
+                                        Min cart: ₹{c.minimumCartValue}
+                                      </p>
+                                    )}
+                                  </div>
 
-              <Button
-                size="sm"
-                className="text-xs"
-                onClick={() => {
-                  setCouponCode(c.code);
-                  setShowCoupons(false);
-                  handleApplyCoupon();
-                }}
-              >
-                Apply
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )}
-</div>
-
+                                  <Button
+                                    size="sm"
+                                    className="text-xs"
+                                    onClick={() => {
+                                      setCouponCode(c.code);
+                                      setShowCoupons(false);
+                                      handleApplyCoupon();
+                                    }}
+                                  >
+                                    Apply
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          }
+                        </div>
+                      )}
+                    </div>
 
                     <div className="p-4 border-t">
                       <div className="flex gap-2 items-center">
@@ -1247,12 +1169,18 @@ useEffect(() => {
                           />
                         </div>
                         <Button
-                          className="w-full rounded-full font-semibold tracking-wide hoverEffect"
+                          className="w-full rounded-full font-semibold tracking-wide hoverEffect bg-green-600 hover:bg-green-700 text-white"
                           size="lg"
                           disabled={loading || !selectedAddressId}
                           onClick={handleProceedToCheckout}
                         >
-                          {loading ? "Please wait..." : "Proceed to Checkout"}
+                          {loading ?
+                            "Opening WhatsApp..."
+                          : <span className="flex items-center justify-center gap-2">
+                              <MessageCircle size={18} />
+                              Checkout on WhatsApp
+                            </span>
+                          }
                         </Button>
                       </div>
                     </div>
@@ -1269,7 +1197,7 @@ useEffect(() => {
                               onValueChange={(val) => {
                                 setSelectedAddressId(val);
                                 const found = (addresses ?? []).find(
-                                  (a) => a._id === val
+                                  (a) => a._id === val,
                                 );
                                 setSelectedAddress(found ?? null);
                               }}
@@ -1287,6 +1215,14 @@ useEffect(() => {
                                     <span className="font-semibold">
                                       {address?.name ?? ""}
                                     </span>
+
+                                    {/* ✅ Show Phone Number */}
+                                    {address?.phone && (
+                                      <span className="text-sm text-black/60">
+                                        📞 {address.phone}
+                                      </span>
+                                    )}
+
                                     <span className="text-sm text-black/60">
                                       {`${address?.address ?? ""}, ${address?.city ?? ""} ${address?.state ?? ""} ${address?.zip ?? ""}`}
                                     </span>
@@ -1351,12 +1287,18 @@ useEffect(() => {
                         />
                       </div>
                       <Button
-                        className="w-full rounded-full font-semibold tracking-wide hoverEffect"
+                        className="w-full rounded-full font-semibold tracking-wide hoverEffect bg-green-600 hover:bg-green-700"
                         size="lg"
                         disabled={loading || !selectedAddressId}
                         onClick={handleProceedToCheckout}
                       >
-                        {loading ? "Please wait..." : "Proceed to Checkout"}
+                        {loading ?
+                          "Opening WhatsApp..."
+                        : <span className="flex items-center justify-center gap-2">
+                            <MessageCircle size={18} />
+                            Checkout on WhatsApp
+                          </span>
+                        }
                       </Button>
                     </div>
                   </div>
