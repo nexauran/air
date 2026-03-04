@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sanity } from "@/lib/sanity";
+import { client } from "@/lib/sanity";
 
 interface AddressDoc {
   _id: string;
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const {
       name,
       email,
-      phone, // ✅ Added
+      phone,
       address,
       city,
       state,
@@ -28,11 +28,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Phone number required" }, { status: 400 });
     }
 
-    const created: { _id: string } = await sanity.create({
+    const created: { _id: string } = await client.create({
       _type: "address",
       name,
       email,
-      phone, // ✅ Save phone
+      phone,
       address,
       city,
       state,
@@ -43,14 +43,14 @@ export async function POST(req: Request) {
 
     // If default = true → unset others
     if (isDefault) {
-      const others = await sanity.fetch<AddressDoc[]>(
+      const others = await client.fetch<AddressDoc[]>(
         `*[_type == "address" && email == $email && _id != $id && default == true]{ _id }`,
         { email, id: created._id }
       );
 
       await Promise.all(
         others.map((addr: AddressDoc) =>
-          sanity
+          client
             .patch(addr._id)
             .set({ default: false })
             .commit({ autoGenerateArrayKeys: true })
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, address: created });
+
   } catch (err) {
     console.error("Address create error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
