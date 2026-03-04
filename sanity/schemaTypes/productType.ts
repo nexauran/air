@@ -77,6 +77,13 @@ export const productType = defineType({
         ],
       },
     }),
+
+  defineField({
+  name: "warrantyAvailable",
+  title: "Warranty Available",
+  type: "boolean",
+  initialValue: false
+}),
     defineField({
       name: "variant",
       title: "Product Type",

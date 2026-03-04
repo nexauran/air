@@ -12,6 +12,11 @@ export const metadata: Metadata = {
     default: "Nexaura online store",
   },
   description: "Enhance your future with us",
+   icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 

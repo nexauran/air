@@ -4,7 +4,7 @@ import { type SchemaTypeDefinition } from "sanity";
 
 import { blockContentType } from "./blockContentType";
 import { categoryType } from "./categoryType";
-
+import { guaranteeType } from "./guarantee";
 import { authorType } from "./authorType";
 import { productType } from "./productType";
 import { orderType } from "./orderType";
@@ -32,7 +32,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     postType,
     coupon,
     freeItemCoupon,
-    freeGift
-    
+    freeGift,
+    guaranteeType
   ],
 };
