@@ -1,3 +1,5 @@
+/** @format */
+
 import { BasketIcon } from "@sanity/icons";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
@@ -150,6 +152,8 @@ export const orderType = defineType({
         ],
       },
     }),
+
+    
 
     // ✅ Payment Method (now always WhatsApp)
     defineField({

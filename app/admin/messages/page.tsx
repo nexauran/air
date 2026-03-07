@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -31,9 +33,7 @@ export default function AdminMessagesPage() {
 
     const fetchOrders = async () => {
       const res = await fetch(
-        search
-          ? `/api/admin-orders?phone=${search}`
-          : "/api/admin-orders"
+        search ? `/api/admin-orders?phone=${search}` : "/api/admin-orders",
       );
       const data = await res.json();
       setOrders(data);
@@ -85,6 +85,25 @@ Once confirmed, we will begin processing immediately.
 Thank you for choosing Nexaura.in ❤️`;
         break;
 
+
+        case "paymentConfirmed":
+  message = `PAYMENT CONFIRMED
+
+Hi ${selectedOrder.customerName},
+
+We have successfully received your payment.
+
+Order ID: ${selectedOrder.orderNumber}
+Amount Paid: ₹${selectedOrder.totalPrice}
+
+Your order is now confirmed and will be processed shortly.
+
+We will notify you once your order is dispatched.
+
+Thank you for choosing Nexaura.in ❤️`;
+
+  break;
+
       case "tracking":
         message = `ORDER DISPATCHED
 
@@ -113,6 +132,24 @@ If you are happy with your purchase, we would truly appreciate a quick review fr
 Your feedback helps our small business grow and serve you better.
 Thank you for choosing Nexaura.in ❤️`;
         break;
+
+      case "warrantySuccess":
+        message = `WARRANTY ACTIVATED SUCCESSFULLY
+
+Hi ${selectedOrder.customerName},
+
+Your warranty has been successfully activated.
+
+Order ID: ${selectedOrder.orderNumber}
+
+You can track your warranty period anytime using the link below:
+
+🛡️ Track Your Warranty:
+https://www.nexauracraft.shop/my-warranty
+
+Thank you for choosing Nexaura.in ❤️`;
+
+        break;
     }
 
     setGeneratedMessage(message);
@@ -128,7 +165,7 @@ Thank you for choosing Nexaura.in ❤️`;
 
     const cleanPhone = selectedOrder.phone.replace(/\D/g, "");
     const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
-      generatedMessage
+      generatedMessage,
     )}`;
 
     window.open(url, "_blank");
@@ -136,7 +173,7 @@ Thank you for choosing Nexaura.in ❤️`;
 
   if (!authorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-black text-white">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-10 rounded-3xl shadow-2xl w-96 text-center">
           <h2 className="text-3xl font-bold mb-6">Nexaura Admin</h2>
           <input
@@ -148,7 +185,7 @@ Thank you for choosing Nexaura.in ❤️`;
           />
           <button
             onClick={handleLogin}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:scale-105 transition"
+            className="w-full py-3 rounded-xl bg-linear-to-br from-purple-600 to-blue-600 hover:scale-105 transition"
           >
             Login
           </button>
@@ -158,9 +195,8 @@ Thank you for choosing Nexaura.in ❤️`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-10">
+    <div className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-black text-white p-10">
       <div className="max-w-5xl mx-auto">
-
         <h1 className="text-4xl font-bold mb-8">
           Nexaura – Admin Message Center
         </h1>
@@ -176,18 +212,12 @@ Thank you for choosing Nexaura.in ❤️`;
         <select
           className="w-full mb-6 px-4 py-3 rounded-xl bg-white/10 border border-white/20"
           onChange={(e) =>
-            setSelectedOrder(
-              orders.find((o) => o._id === e.target.value)
-            )
+            setSelectedOrder(orders.find((o) => o._id === e.target.value))
           }
         >
           <option className="text-black">Select Order</option>
           {orders.map((order) => (
-            <option
-              key={order._id}
-              value={order._id}
-              className="text-black"
-            >
+            <option key={order._id} value={order._id} className="text-black">
               {order.orderNumber} – {order.customerName}
             </option>
           ))}
@@ -209,6 +239,13 @@ Thank you for choosing Nexaura.in ❤️`;
           </button>
 
           <button
+            onClick={() => generateMessage("paymentConfirmed")}
+            className="px-5 py-2 rounded-xl bg-teal-600 hover:scale-105 transition"
+          >
+            Payment Confirmed
+          </button>
+
+          <button
             onClick={() => setShowTrackingForm(true)}
             className="px-5 py-2 rounded-xl bg-green-600 hover:scale-105 transition"
           >
@@ -221,13 +258,18 @@ Thank you for choosing Nexaura.in ❤️`;
           >
             Review
           </button>
+
+          <button
+            onClick={() => generateMessage("warrantySuccess")}
+            className="px-5 py-2 rounded-xl bg-emerald-600 hover:scale-105 transition"
+          >
+            Warranty Success
+          </button>
         </div>
 
         {showTrackingForm && (
           <div className="bg-white/10 border border-white/20 p-6 rounded-2xl mb-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Add Tracking Details
-            </h2>
+            <h2 className="text-lg font-semibold mb-4">Add Tracking Details</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input

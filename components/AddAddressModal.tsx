@@ -92,7 +92,7 @@ export default function AddAddressModal({
       <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
-  <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white px-6 py-4">
+  <div className="bg-linear-to-r from-gray-900 to-gray-800 text-white px-6 py-4">
     <DialogHeader>
       <DialogTitle className="text-lg font-semibold">
         Add New Address
@@ -174,7 +174,7 @@ export default function AddAddressModal({
       {/* Zip */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          Zip Code
+          Pin Code
         </Label>
         <Input
           required

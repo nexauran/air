@@ -296,8 +296,8 @@ const CartPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
 
   // --- Shipping configuration ---
-  const SHIPPING_FEE = 59;
-  const FREE_SHIPPING_THRESHOLD = 699;
+  const SHIPPING_FEE = 49;
+  const FREE_SHIPPING_THRESHOLD = 599;
 
   const computeShipping = (productsTotal: number) => {
     if (!productsTotal || productsTotal <= 0) return 0;
@@ -1250,8 +1250,8 @@ Thank you.
                   </div>
                 </div>
 
-                <div className="md:hidden fixed bottom-0 left-0 w-full bg-white pt-2">
-                  <div className="bg-white p-4 rounded-lg border mx-4">
+                <div className="md:hidden w-full bg-white pt-2 mt-5  rounded-xl overflow-hidden">
+                  <div className="bg-white p-4 rounded-lg border mx-4 mb-2">
                     <h2>Order Summary</h2>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -1313,3 +1313,4 @@ Thank you.
 };
 
 export default CartPage;
+
