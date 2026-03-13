@@ -10,7 +10,11 @@ import {
   OTHERS_BLOG_QUERY,
   PRODUCT_BY_SLUG_QUERY,
   SINGLE_BLOG_QUERY,
+  RELATED_PRODUCTS_QUERY,
+  OTHER_PRODUCTS_QUERY,
 } from "./query";
+
+/* ---------------- CATEGORY ---------------- */
 
 const getCategories = async (quantity?: number) => {
   try {
@@ -23,16 +27,20 @@ const getCategories = async (quantity?: number) => {
           ...,
           "productCount": count(*[_type == "product" && references(^._id)])
         }`;
+
     const { data } = await sanityFetch({
       query,
       params: quantity ? { quantity } : {},
     });
+
     return data;
   } catch (error) {
     console.log("Error fetching categories", error);
     return [];
   }
 };
+
+/* ---------------- BRANDS ---------------- */
 
 const getAllBrands = async () => {
   try {
@@ -44,6 +52,8 @@ const getAllBrands = async () => {
   }
 };
 
+/* ---------------- LATEST BLOG ---------------- */
+
 const getLatestBlogs = async () => {
   try {
     const { data } = await sanityFetch({ query: LATEST_BLOG_QUERY });
@@ -53,6 +63,9 @@ const getLatestBlogs = async () => {
     return [];
   }
 };
+
+/* ---------------- DEAL PRODUCTS ---------------- */
+
 const getDealProducts = async () => {
   try {
     const { data } = await sanityFetch({ query: DEAL_PRODUCTS });
@@ -62,82 +75,138 @@ const getDealProducts = async () => {
     return [];
   }
 };
+
+/* ---------------- PRODUCT BY SLUG ---------------- */
+
 const getProductBySlug = async (slug: string) => {
   try {
     const product = await sanityFetch({
       query: PRODUCT_BY_SLUG_QUERY,
-      params: {
-        slug,
-      },
+      params: { slug },
     });
+
     return product?.data || null;
   } catch (error) {
-    console.error("Error fetching product by ID:", error);
+    console.error("Error fetching product by slug:", error);
     return null;
   }
 };
+
+/* ---------------- RELATED PRODUCTS ---------------- */
+
+const getRelatedProducts = async (categoryId: string, slug: string) => {
+  try {
+    const { data } = await sanityFetch({
+      query: RELATED_PRODUCTS_QUERY,
+      params: {
+        categoryId,
+        slug,
+      },
+    });
+
+    return data ?? [];
+  } catch (error) {
+    console.log("Error fetching related products:", error);
+    return [];
+  }
+};
+
+/* ---------------- OTHER PRODUCTS ---------------- */
+
+const getOtherProducts = async (slug: string) => {
+  try {
+    const { data } = await sanityFetch({
+      query: OTHER_PRODUCTS_QUERY,
+      params: { slug },
+    });
+
+    return data ?? [];
+  } catch (error) {
+    console.log("Error fetching other products:", error);
+    return [];
+  }
+};
+
+/* ---------------- BRAND ---------------- */
+
 const getBrand = async (slug: string) => {
   try {
     const product = await sanityFetch({
       query: BRAND_QUERY,
-      params: {
-        slug,
-      },
+      params: { slug },
     });
+
     return product?.data || null;
   } catch (error) {
-    console.error("Error fetching product by ID:", error);
+    console.error("Error fetching brand:", error);
     return null;
   }
 };
+
+/* ---------------- USER ORDERS ---------------- */
+
 const getMyOrders = async (userId: string) => {
   try {
     const orders = await sanityFetch({
       query: MY_ORDERS_QUERY,
       params: { userId },
     });
+
     return orders?.data || null;
   } catch (error) {
-    console.error("Error fetching product by ID:", error);
+    console.error("Error fetching orders:", error);
     return null;
   }
 };
+
+/* ---------------- BLOGS ---------------- */
+
 const getAllBlogs = async (quantity: number) => {
   try {
     const { data } = await sanityFetch({
       query: GET_ALL_BLOG,
       params: { quantity },
     });
+
     return data ?? [];
   } catch (error) {
-    console.log("Error fetching all brands:", error);
+    console.log("Error fetching blogs:", error);
     return [];
   }
 };
 
+/* ---------------- SINGLE BLOG ---------------- */
+
 const getSingleBlog = async (slug: string) => {
   try {
     const { data } = await sanityFetch({
-      query: SINGLE_BLOG_QUERY ,
+      query: SINGLE_BLOG_QUERY,
       params: { slug },
     });
+
     return data ?? [];
   } catch (error) {
-    console.log("Error fetching all brands:", error);
+    console.log("Error fetching blog:", error);
     return [];
   }
 };
+
+/* ---------------- BLOG CATEGORIES ---------------- */
+
 const getBlogCategories = async () => {
   try {
     const { data } = await sanityFetch({
       query: BLOG_CATEGORIES,
     });
+
     return data ?? [];
   } catch (error) {
-    console.log("Error fetching all brands:", error);
+    console.log("Error fetching blog categories:", error);
     return [];
   }
 };
+
+/* ---------------- OTHER BLOGS ---------------- */
 
 const getOthersBlog = async (slug: string, quantity: number) => {
   try {
@@ -145,18 +214,24 @@ const getOthersBlog = async (slug: string, quantity: number) => {
       query: OTHERS_BLOG_QUERY,
       params: { slug, quantity },
     });
+
     return data ?? [];
   } catch (error) {
-    console.log("Error fetching all brands:", error);
+    console.log("Error fetching other blogs:", error);
     return [];
   }
 };
+
+/* ---------------- EXPORTS ---------------- */
+
 export {
   getCategories,
   getAllBrands,
   getLatestBlogs,
   getDealProducts,
   getProductBySlug,
+  getRelatedProducts,
+  getOtherProducts,
   getBrand,
   getMyOrders,
   getAllBlogs,
