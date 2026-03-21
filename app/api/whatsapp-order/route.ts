@@ -1,3 +1,5 @@
+/** @format */
+
 import { NextResponse } from "next/server";
 import { client } from "@/sanity/lib/client";
 
@@ -5,13 +7,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const doc = {
+    // ✅ 1. MAIN ORDER (no change)
+    const orderDoc = await client.create({
       _type: "order",
 
       orderNumber: body.orderId,
       orderDate: body.orderDate,
 
-      // ✅ VERY IMPORTANT (this makes orders page work)
       clerkUserId: body.clerkUserId,
 
       customerName: body.customerName,
@@ -26,23 +28,59 @@ export async function POST(req: Request) {
       totalPrice: body.total,
 
       currency: "INR",
-
       address: body.address,
 
-      status: "pending", // must match schema options
+      status: "pending",
       paymentMethod: "WhatsApp",
 
       createdAt: new Date().toISOString(),
-    };
+    });
 
-    const result = await client.create(doc);
+    // ✅ 2. POSTER ORDER (FIXED FOR YOUR NEW SCHEMA)
+    const posterDocs = [];
 
-    return NextResponse.json({ success: true, id: result._id });
+    for (const item of body.products) {
+      if (item.selectedPosters && item.selectedPosters.length > 0) {
+        const posterDoc = await client.create({
+          _type: "posterOrder",
+
+          orderId: body.orderId,
+          createdAt: new Date().toISOString(),
+
+          customerName: body.customerName,
+          phone: body.phone,
+
+          products: [
+            {
+              _key: crypto.randomUUID(), // ✅ FIX 1
+
+              productName: item.productName || "24 Posters Combo",
+              quantity: item.quantity || 1,
+
+              selectedPosters: item.selectedPosters.map((poster: any) => ({
+                _key: crypto.randomUUID(), // ✅ FIX 2
+                id: poster.id,
+                name: poster.name,
+                image: poster.image,
+              })),
+            },
+          ],
+        });
+
+        posterDocs.push(posterDoc);
+      }
+    }
+    return NextResponse.json({
+      success: true,
+      orderId: orderDoc._id,
+      posterDocs,
+    });
   } catch (error: any) {
     console.error("Sanity save error:", error);
+
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

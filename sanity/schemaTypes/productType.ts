@@ -1,3 +1,5 @@
+/** @format */
+
 import { TrolleyIcon } from "@sanity/icons";
 import { defineField, defineType } from "sanity";
 
@@ -6,6 +8,7 @@ export const productType = defineType({
   title: "Products",
   type: "document",
   icon: TrolleyIcon,
+
   fields: [
     defineField({
       name: "name",
@@ -13,51 +16,56 @@ export const productType = defineType({
       type: "string",
       validation: (Rule) => Rule.required(),
     }),
+
     defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
-      options: {
-        source: "name",
-        maxLength: 96,
-      },
+      options: { source: "name", maxLength: 96 },
       validation: (Rule) => Rule.required(),
     }),
+
     defineField({
       name: "images",
       title: "Product Images",
       type: "array",
       of: [{ type: "image", options: { hotspot: true } }],
     }),
+
     defineField({
       name: "description",
       title: "Description",
       type: "string",
     }),
+
     defineField({
       name: "price",
       title: "Price",
       type: "number",
       validation: (Rule) => Rule.required().min(0),
     }),
+
     defineField({
       name: "discount",
       title: "Discount Percentage",
       type: "number",
       validation: (Rule) => Rule.required().min(0),
     }),
+
     defineField({
       name: "categories",
       title: "Categories",
       type: "array",
       of: [{ type: "reference", to: { type: "category" } }],
     }),
+
     defineField({
       name: "stock",
       title: "Stock",
       type: "number",
       validation: (Rule) => Rule.min(0),
     }),
+
     defineField({
       name: "brand",
       title: "Brand",
@@ -78,12 +86,13 @@ export const productType = defineType({
       },
     }),
 
-  defineField({
-  name: "warrantyAvailable",
-  title: "Warranty Available",
-  type: "boolean",
-  initialValue: false
-}),
+    defineField({
+      name: "warrantyAvailable",
+      title: "Warranty Available",
+      type: "boolean",
+      initialValue: false,
+    }),
+
     defineField({
       name: "variant",
       title: "Product Type",
@@ -97,14 +106,46 @@ export const productType = defineType({
         ],
       },
     }),
+
     defineField({
       name: "isFeatured",
       title: "Featured Product",
       type: "boolean",
-      description: "Toggle to Featured on or off",
       initialValue: false,
     }),
+
+    // 🔥 NEW FIELDS (IMPORTANT)
+
+    defineField({
+      name: "enablePosterSelection",
+      title: "Enable Poster Selection",
+      type: "boolean",
+      initialValue: false,
+    }),
+
+    defineField({
+      name: "posterLimit",
+      title: "Poster Limit",
+      type: "number",
+      validation: (Rule) => Rule.min(1).max(100),
+      hidden: ({ parent }) => !parent?.enablePosterSelection,
+    }),
+
+    defineField({
+      name: "allowedCategories",
+      title: "Allowed Poster Categories",
+      type: "array",
+      of: [
+        {
+          type: "reference",
+          to: [{ type: "posterCategory" }],
+        },
+      ],
+      description: "Leave empty to allow all categories",
+      hidden: ({ parent }) => !parent?.enablePosterSelection,
+    }),
   ],
+
   preview: {
     select: {
       title: "name",
@@ -114,8 +155,9 @@ export const productType = defineType({
     prepare(selection) {
       const { title, subtitle, media } = selection;
       const image = media && media[0];
+
       return {
-        title: title,
+        title,
         subtitle: `₹${subtitle}`,
         media: image,
       };

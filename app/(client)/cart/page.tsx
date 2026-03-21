@@ -37,7 +37,7 @@ import AddAddressModal from "@/components/AddAddressModal";
 type AddressDoc = {
   _id?: string;
   name?: string;
-   phone?: string;
+  phone?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -45,6 +45,13 @@ type AddressDoc = {
   default?: boolean;
   publishedAt?: string;
   createdAt?: string;
+};
+type ProductWithPosters = {
+  _posterData?: {
+    id?: string;
+    name: string;
+    image?: string;
+  }[];
 };
 
 /** Coupon response shape from /api/apply-coupon */
@@ -61,6 +68,7 @@ type AppliedCoupon = {
  *
  * Note: we intentionally type many fields as `any` to be resilient to server shapes.
  */
+
 function normalizeFreeItemToProduct(fi: any, idx: number) {
   const id =
     fi._id ?? fi.id ?? `free-${Math.random().toString(36).slice(2, 9)}-${idx}`;
@@ -677,118 +685,123 @@ const CartPage: React.FC = () => {
   }
 
   const [loading, setLoading] = useState(false);
+  
 
   const handleProceedToCheckout = async () => {
-  try {
-    if (loading) return;
+    try {
+      if (loading) return;
 
-    if (!selectedAddressId || !selectedAddress) {
-      toast.error("Please add or select a delivery address before checkout.");
-      return;
-    }
+      if (!selectedAddressId || !selectedAddress) {
+        toast.error("Please add or select a delivery address before checkout.");
+        return;
+      }
 
-    if (!groupedItems || groupedItems.length === 0) {
-      toast.error("Cart is empty.");
-      return;
-    }
+      if (!groupedItems || groupedItems.length === 0) {
+        toast.error("Cart is empty.");
+        return;
+      }
 
-    setLoading(true);
+      setLoading(true);
 
-    // 🔥 Generate Order ID
-    const randomCode = Math.random()
-      .toString(36)
-      .substring(2, 7)
-      .toUpperCase();
-    const orderId = `ORD-${randomCode}`;
-    const orderDate = new Date().toISOString();
+      // 🔥 Generate Order ID
+      const randomCode = Math.random()
+        .toString(36)
+        .substring(2, 7)
+        .toUpperCase();
+      const orderId = `ORD-${randomCode}`;
+      const orderDate = new Date().toISOString();
 
-    const clerkUserId = user?.id;
+      const clerkUserId = user?.id;
 
-    const customerName =
-      (user &&
-        (user.fullName ??
-          `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim())) ||
-      selectedAddress?.name ||
-      "";
+      const customerName =
+        (user &&
+          (user.fullName ??
+            `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim())) ||
+        selectedAddress?.name ||
+        "";
 
-    const customerEmail = getUserEmail(user) ?? "";
+      const customerEmail = getUserEmail(user) ?? "";
 
-    // ✅ FIXED PHONE SOURCE
-    const customerPhone =
-      selectedAddress?.phone ||
-      getUserPhone(user) ||
-      "";
+      // ✅ FIXED PHONE SOURCE
+      const customerPhone = selectedAddress?.phone || getUserPhone(user) || "";
 
-    if (!customerPhone) {
-      toast.error("Phone number is required before checkout.");
-      setLoading(false);
-      return;
-    }
+      if (!customerPhone) {
+        toast.error("Phone number is required before checkout.");
+        setLoading(false);
+        return;
+      }
 
-    const subtotal = getSubTotalPrice();
-    const shippingCharge = computeShipping(subtotal);
-    const productsTotal = getTotalPrice();
+      const subtotal = getSubTotalPrice();
+      const shippingCharge = computeShipping(subtotal);
+      const productsTotal = getTotalPrice();
 
-    const finalTotal = Math.round(
-      (productsTotal ?? 0) + shippingCharge - couponDiscountTotal
-    );
+      const finalTotal = Math.round(
+        (productsTotal ?? 0) + shippingCharge - couponDiscountTotal,
+      );
 
-    if (!finalTotal || finalTotal <= 0) {
-      toast.error("Invalid total amount.");
-      setLoading(false);
-      return;
-    }
+      if (!finalTotal || finalTotal <= 0) {
+        toast.error("Invalid total amount.");
+        setLoading(false);
+        return;
+      }
 
-    // ✅ Prepare Products for Sanity
-    const productsForSanity = groupedItems.map(({ product }) => ({
-      _key: product?._id,
-      product: {
-        _type: "reference",
-        _ref: product?._id,
-      },
-      quantity: getItemCount(product?._id ?? "") || 1,
-    }));
+      // ✅ Prepare Products for Sanity
+      const productsForSanity = groupedItems.map(({ product }) => {
+  const p = product as typeof product & ProductWithPosters;
 
-    // ✅ Save Order
-    const saveRes = await fetch("/api/whatsapp-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        orderDate,
-        clerkUserId,
-        customerName,
-        email: customerEmail,
-        phone: customerPhone,
-        address: selectedAddress,
-        products: productsForSanity,
-        subtotal,
-        shipping: shippingCharge,
-        couponDiscount: couponDiscountTotal,
-        total: finalTotal,
-        status: "pending",
-        paymentMethod: "WhatsApp",
-      }),
-    });
+  return {
+    _key: p?._id,
+    product: {
+      _type: "reference",
+      _ref: p?._id,
+    },
+    quantity: getItemCount(p?._id ?? "") || 1,
 
-    if (!saveRes.ok) {
-      const errorText = await saveRes.text();
-      console.error("Order save failed:", errorText);
-      toast.error("Failed to save order.");
-      setLoading(false);
-      return;
-    }
+    // ✅ FIXED (no TS error + safe)
+    selectedPosters: p._posterData ?? [],
+  };
+});
 
-    const saveJson = await saveRes.json();
+      // ✅ Save Order
+      const saveRes = await fetch("/api/whatsapp-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          orderDate,
+          clerkUserId,
+          customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          address: selectedAddress,
+          products: productsForSanity,
+          subtotal,
+          shipping: shippingCharge,
+          couponDiscount: couponDiscountTotal,
+          total: finalTotal,
+          status: "pending",
+          paymentMethod: "WhatsApp",
+        }),
+      });
 
-    if (!saveJson.success) {
-      toast.error("Failed to save order.");
-      setLoading(false);
-      return;
-    }
+      if (!saveRes.ok) {
+        const errorText = await saveRes.text();
+        console.error("Order save failed:", errorText);
+        toast.error("Failed to save order.");
+        setLoading(false);
+        return;
+      }
 
-    // ✅ PROFESSIONAL WHATSAPP MESSAGE (CLEAN FORMAT)
-    let message = `
+      const saveJson = await saveRes.json();
+
+      if (!saveJson.success) {
+        toast.error("Failed to save order.");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ PROFESSIONAL WHATSAPP MESSAGE (CLEAN FORMAT)
+      let message = `
 🧾 NEW ORDER RECEIVED
 ━━━━━━━━━━━━━━━━━━
 
@@ -810,19 +823,19 @@ Order Summary
 ━━━━━━━━━━━━━━━━━━
 `;
 
-    groupedItems.forEach(({ product }) => {
-      const qty = getItemCount(product?._id ?? "") || 1;
-      const price = product?.price ?? 0;
-      const itemTotal = price * qty;
+      groupedItems.forEach(({ product }) => {
+        const qty = getItemCount(product?._id ?? "") || 1;
+        const price = product?.price ?? 0;
+        const itemTotal = price * qty;
 
-      message += `
+        message += `
 ${product?.name}
 Qty: ${qty} × ₹${price}
 Line Total: ₹${itemTotal}
 `;
-    });
+      });
 
-    message += `
+      message += `
 ━━━━━━━━━━━━━━━━━━
 Subtotal: ₹${subtotal}
 Discount: -₹${couponDiscountTotal}
@@ -834,27 +847,27 @@ Kindly confirm this order and proceed with processing.
 Thank you.
 `;
 
-    const phoneNumber = "919495217987"; // your business WhatsApp number
-    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-      message
-    )}`;
+      const phoneNumber = "919495217987"; // your business WhatsApp number
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message,
+      )}`;
 
-    // ✅ Open WhatsApp
-    window.open(whatsappURL, "_blank");
+      // ✅ Open WhatsApp
+      window.open(whatsappURL, "_blank");
 
-    // ✅ Clear Cart
-    resetCart();
+      // ✅ Clear Cart
+      resetCart();
 
-    // ✅ Redirect
-    router.push(`/order/confirm?orderNumber=${orderId}`);
+      // ✅ Redirect
+      router.push(`/order/confirm?orderNumber=${orderId}`);
 
-    setLoading(false);
-  } catch (err: any) {
-    console.error("Checkout error:", err);
-    toast.error("Checkout failed.");
-    setLoading(false);
-  }
-};
+      setLoading(false);
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error("Checkout failed.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-gray-50 pb-52 md:pb-10">
@@ -1313,4 +1326,3 @@ Thank you.
 };
 
 export default CartPage;
-

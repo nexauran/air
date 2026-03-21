@@ -1,12 +1,35 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-export default clerkMiddleware();
+function customMiddleware(_: any, req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // ✅ allow login page
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
+  // 🔒 protect admin routes
+  if (pathname.startsWith("/admin")) {
+    const token = req.cookies.get("admin_token")?.value;
+
+    console.log("TOKEN IN MIDDLEWARE:", token);
+
+    if (!token) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
+}
+
+export default clerkMiddleware(customMiddleware);
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    "/((?!_next|.*\\..*).*)", // ✅ run on ALL routes
   ],
 };

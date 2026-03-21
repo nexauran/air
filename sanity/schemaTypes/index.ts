@@ -16,6 +16,11 @@ import { postType } from "./postType";
 import coupon from "./coupon";
 import freeItemCoupon from "./freeItemCoupon";
 import freeGift from "./freeGift";
+import poster from "./poster";
+import posterOrder from "./posterOrder";
+import posterCategory from "./posterCategory";
+
+
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
@@ -33,6 +38,10 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     coupon,
     freeItemCoupon,
     freeGift,
-    guaranteeType
+    guaranteeType,
+    posterOrder,
+    poster,
+    posterCategory,
+    
   ],
 };

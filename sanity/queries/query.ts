@@ -39,15 +39,36 @@ const DEAL_PRODUCTS = defineQuery(
 /* PRODUCT BY SLUG */
 /* -------------------------------- */
 
-const PRODUCT_BY_SLUG_QUERY = defineQuery(
-  `*[_type == "product" && slug.current == $slug][0]{
-    ...,
+const PRODUCT_BY_SLUG_QUERY = defineQuery(`
+  *[_type == "product" && slug.current == $slug][0]{
+    _id,
+    name,
+    slug,
+    description,
+    price,
+    discount,
+    images,
+    stock,
+    status,
+    variant,
+    isFeatured,
+    warrantyAvailable,
+
+    // categories
     categories[]->{
       _id,
       title
+    },
+
+    // 🔥 IMPORTANT (POSTER SYSTEM)
+    enablePosterSelection,
+    posterLimit,
+    allowedCategories[]->{
+      _id,
+      title
     }
-  }`
-);
+  }
+`);
 
 /* -------------------------------- */
 /* RELATED PRODUCTS (BY CATEGORY) */
