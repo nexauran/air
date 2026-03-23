@@ -4,32 +4,52 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { username, password } = await req.json();
 
-  if (
-    username !== process.env.ADMIN_USERNAME ||
-    password !== process.env.ADMIN_PASSWORD
-  ) {
+  // 🔥 All admins list
+  const admins = [
+    {
+      username: process.env.ADMIN_1_USERNAME,
+      password: process.env.ADMIN_1_PASSWORD,
+    },
+    {
+      username: process.env.ADMIN_2_USERNAME,
+      password: process.env.ADMIN_2_PASSWORD,
+    },
+    {
+      username: process.env.ADMIN_3_USERNAME,
+      password: process.env.ADMIN_3_PASSWORD,
+    },
+  ];
+
+  // ✅ check match
+  const admin = admins.find(
+    (a) => a.username === username && a.password === password
+  );
+
+  if (!admin) {
     return NextResponse.json(
       { error: "Invalid credentials" },
       { status: 401 }
     );
   }
 
-  // 🔐 Create token (1 hour)
+  // 🔐 create token (store username)
   const token = jwt.sign(
-    { admin: true },
+    {
+      admin: true,
+      username: admin.username, // 🔥 useful later
+    },
     process.env.JWT_SECRET!,
     { expiresIn: "1h" }
   );
 
   const response = NextResponse.json({ success: true });
 
-  // 🍪 Set cookie
   response.cookies.set("admin_token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // ✅ FIXED
-    sameSite: "strict", // ✅ more secure
+    secure: false,
+    sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60, // ✅ 1 hour
+    maxAge: 60 * 60,
   });
 
   return response;
