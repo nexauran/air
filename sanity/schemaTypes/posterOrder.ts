@@ -2,21 +2,20 @@ export default {
   name: "posterOrder",
   type: "document",
   title: "Poster Orders",
+
   fields: [
-    // ✅ Order Info
     {
       name: "orderId",
       type: "string",
       title: "Order ID",
     },
-
     {
       name: "createdAt",
       type: "datetime",
       title: "Created At",
     },
 
-    // ✅ Customer Info
+    // Customer
     {
       name: "customerName",
       type: "string",
@@ -28,7 +27,7 @@ export default {
       title: "Phone",
     },
 
-    // ✅ Products (Scalable for future)
+    // Products
     {
       name: "products",
       type: "array",
@@ -36,6 +35,7 @@ export default {
       of: [
         {
           type: "object",
+
           fields: [
             {
               name: "productName",
@@ -43,7 +43,6 @@ export default {
               title: "Product Name",
               initialValue: "24 Posters Combo",
             },
-
             {
               name: "quantity",
               type: "number",
@@ -51,7 +50,6 @@ export default {
               initialValue: 1,
             },
 
-            // ✅ Selected Posters
             {
               name: "selectedPosters",
               type: "array",
@@ -59,6 +57,7 @@ export default {
               of: [
                 {
                   type: "object",
+
                   fields: [
                     {
                       name: "id",
@@ -72,16 +71,65 @@ export default {
                     },
                     {
                       name: "image",
-                      type: "url",
-                      title: "Image URL",
+                      type: "image",
+                      title: "Poster Image",
                     },
                   ],
+
+                  // 🔥 Poster preview (fixes "Untitled")
+                  preview: {
+                    select: {
+                      title: "name",
+                      subtitle: "id",
+                      media: "image",
+                    },
+                  },
                 },
               ],
             },
           ],
+
+          // 🔥 Product preview
+          preview: {
+            select: {
+              title: "productName",
+              subtitle: "quantity",
+            },
+            prepare({
+              title,
+              subtitle,
+            }: {
+              title?: string;
+              subtitle?: number;
+            }) {
+              return {
+                title: title || "Product",
+                subtitle: `Qty: ${subtitle ?? 0}`,
+              };
+            },
+          },
         },
       ],
     },
   ],
+
+  // 🔥 Order preview in list
+  preview: {
+    select: {
+      title: "orderId",
+      subtitle: "customerName",
+    },
+    prepare({
+      title,
+      subtitle,
+    }: {
+      title?: string;
+      subtitle?: string;
+    }) {
+      return {
+        title: title || "Order",
+        subtitle: subtitle ? `Customer: ${subtitle}` : "",
+      };
+    },
+  },
 };
