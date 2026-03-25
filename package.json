@@ -43,6 +43,7 @@
     "leaflet": "^1.9.4",
     "localtunnel": "^2.0.2",
     "lucide-react": "^0.554.0",
+    "mongoose": "^9.3.3",
     "motion": "^12.23.24",
     "next": "^16.1.6",
     "next-sanity": "^11.6.8",
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",

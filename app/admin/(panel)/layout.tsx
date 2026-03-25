@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 
 import Link from "next/link";
@@ -18,6 +20,7 @@ export default function AdminLayout({ children }: any) {
     { name: "Messages", path: "/admin/messages" },
     { name: "Posters", path: "/admin/posters" },
     { name: "Categories", path: "/admin/categories" },
+    { name: "Order Status", path: "/admin/order-status" },
   ];
 
   // 🔥 Get admin name from token
@@ -51,7 +54,6 @@ export default function AdminLayout({ children }: any) {
 
   return (
     <div className="h-screen overflow-hidden flex">
-
       {/* 📱 Mobile Top */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b px-4 flex items-center justify-between z-50 md:hidden">
         <h2 className="font-semibold text-[#16a34a]">Admin</h2>
@@ -86,9 +88,9 @@ export default function AdminLayout({ children }: any) {
                   onClick={() => setOpen(false)}
                   className={`p-3 rounded-xl text-sm font-medium transition cursor-pointer
                   ${
-                    isActive
-                      ? "bg-[#16a34a] text-white shadow"
-                      : "text-gray-700 hover:bg-[#ecfdf5]"
+                    isActive ?
+                      "bg-[#16a34a] text-white shadow"
+                    : "text-gray-700 hover:bg-[#ecfdf5]"
                   }`}
                 >
                   {item.name}
@@ -100,19 +102,14 @@ export default function AdminLayout({ children }: any) {
 
         {/* 👤 Bottom User */}
         <div className="absolute bottom-6 left-5 right-5 border-t pt-4 space-y-3">
-
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-sm font-semibold">
               {adminName?.charAt(0).toUpperCase()}
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-800">
-                {adminName}
-              </p>
-              <p className="text-xs text-gray-400">
-                Administrator
-              </p>
+              <p className="text-sm font-medium text-gray-800">{adminName}</p>
+              <p className="text-xs text-gray-400">Administrator</p>
             </div>
           </div>
 
@@ -133,7 +130,6 @@ export default function AdminLayout({ children }: any) {
       {/* 🔥 Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center">
-
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowLogoutModal(false)}

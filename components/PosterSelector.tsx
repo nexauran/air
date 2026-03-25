@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { urlFor } from "@/lib/imageUrl";
 
 interface Poster {
   _id: string;
   title: string;
-  image: string;
+  image: any; // 🔥 important (Sanity image object)
 }
 
 interface Category {
@@ -33,7 +34,7 @@ const PosterSelector = ({
   const [visibleCount, setVisibleCount] = useState(8);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // FETCH CATEGORIES
+  // ✅ FETCH CATEGORIES
   useEffect(() => {
     if (!enabled) return;
 
@@ -53,9 +54,9 @@ const PosterSelector = ({
     };
 
     fetchCategories();
-  }, [enabled]);
+  }, [enabled, allowedCategories]);
 
-  // FETCH POSTERS
+  // ✅ FETCH POSTERS
   const loadPosters = async (categoryId: string) => {
     setStep("posters");
     setActiveCategory(categoryId);
@@ -67,7 +68,7 @@ const PosterSelector = ({
     setVisibleCount(8);
   };
 
-  // TOGGLE SELECT
+  // ✅ SELECT / DESELECT
   const toggleSelect = (poster: Poster) => {
     let updated;
 
@@ -89,7 +90,7 @@ const PosterSelector = ({
   return (
     <div className="mt-6 border-t pt-6 space-y-4">
 
-      {/* ✅ HEADER (FIXED ALIGNMENT) */}
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">
           Select Posters ({selected.length}/{limit})
@@ -108,7 +109,7 @@ const PosterSelector = ({
         )}
       </div>
 
-      {/* ✅ CATEGORY GRID */}
+      {/* CATEGORY GRID */}
       {step === "category" && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {categories.map((cat) => (
@@ -123,7 +124,7 @@ const PosterSelector = ({
         </div>
       )}
 
-      {/* ✅ POSTERS GRID */}
+      {/* POSTERS GRID */}
       {step === "posters" && (
         <div>
 
@@ -138,21 +139,35 @@ const PosterSelector = ({
             {posters.slice(0, visibleCount).map((poster) => {
               const isSelected = selected.find((p) => p._id === poster._id);
 
+              let imageUrl = "";
+
+              try {
+                imageUrl = poster.image
+                  ? urlFor(poster.image).width(400).height(400).url()
+                  : "/placeholder.png";
+              } catch {
+                imageUrl = "/placeholder.png";
+              }
+
               return (
                 <div
                   key={poster._id}
                   onClick={() => toggleSelect(poster)}
-                  className={`border rounded-lg cursor-pointer relative ${
+                  className={`border rounded-lg cursor-pointer relative overflow-hidden ${
                     isSelected ? "border-black" : ""
                   }`}
                 >
                   <img
-                    src={poster.image}
+                    src={imageUrl}
                     alt={poster.title}
-                    className="w-full h-40 object-cover rounded"
+                    className="w-full h-40 object-cover"
                     loading="lazy"
+                    onError={(e) =>
+                      (e.currentTarget.src = "/placeholder.png")
+                    }
                   />
 
+                  {/* SELECT CHECK */}
                   {isSelected && (
                     <div className="absolute top-2 right-2 bg-black text-white text-xs px-2 py-1 rounded">
                       ✓
