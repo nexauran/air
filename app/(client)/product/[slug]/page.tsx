@@ -9,8 +9,6 @@ import ProductChar from "@/components/ProductChar";
 import ProductCard from "@/components/ProductCard";
 import ProductPosterWrapper from "@/components/ProductPosterWrapper";
 
-// replace AddToCartButton
-
 import {
   getProductBySlug,
   getRelatedProducts,
@@ -39,16 +37,10 @@ const SingleProductPage = async ({
     return notFound();
   }
 
-  /* CATEGORY ID */
-
   const categoryId = product?.categories?.[0]?._id;
-
-  /* RELATED PRODUCTS */
 
   const relatedProducts =
     categoryId ? await getRelatedProducts(categoryId, slug) : [];
-
-  /* OTHER PRODUCTS */
 
   const otherProducts = await getOtherProducts(slug);
 
@@ -56,13 +48,11 @@ const SingleProductPage = async ({
     <>
       <Container className="flex flex-col md:flex-row gap-10 py-10">
         {/* PRODUCT IMAGE */}
-
         {product?.images && (
           <ImageView images={product?.images} isStock={product?.stock} />
         )}
 
         {/* PRODUCT INFO */}
-
         <div className="w-full md:w-1/2 flex flex-col gap-5">
           <div className="space-y-1">
             <h2 className="text-2xl font-bold">{product?.name}</h2>
@@ -73,7 +63,6 @@ const SingleProductPage = async ({
           </div>
 
           {/* PRICE */}
-
           <div className="space-y-2 border-t border-b border-gray-200 py-5">
             <div className="font-semibold">
               For better clarity and high-quality results, kindly send your
@@ -97,16 +86,26 @@ const SingleProductPage = async ({
             </p>
           </div>
 
-          {/* BUTTONS */}
-
-          <div className=" w-full flex items-center gap-2.5 lg:gap-3 ">
+          {/* Poster Selector (only when needed) */}
+          {(product?.productType === "Posters" ||
+            product?.enablePosterSelection) && (
             <ProductPosterWrapper product={product} />
+          )}
+
+          {/* ✅ ALWAYS SHOW BUTTONS */}
+          <div className="w-full flex items-center gap-3 mt-2">
+            <div className="w-12.5 flex justify-center">
+              <FavoriteButton showProduct={true} product={product} />
+            </div>
+
+            <div className="flex-1">
+              <AddToCartButton product={product} />
+            </div>
           </div>
 
           <ProductChar product={product} />
 
-          {/* QUICK LINKS */}
-
+          {/* QUICK LINKS (RESTORED) */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-b-gray-200 py-5 -mt-2">
             <div className="flex items-center gap-2 text-sm hover:text-red-600">
               <FaRegQuestionCircle className="text-lg" />
@@ -124,17 +123,14 @@ const SingleProductPage = async ({
             </div>
           </div>
 
-          {/* DELIVERY INFO */}
-
+          {/* DELIVERY INFO (RESTORED DESIGN) */}
           <div className="flex flex-col">
             <div className="border border-lightColor/25 border-b-0 p-3 flex items-center gap-2.5">
               <Truck size={30} className="text-shop_orange" />
-
               <div>
                 <p className="text-base font-semibold">
                   All India Delivery Available
                 </p>
-
                 <p className="text-sm text-gray-500 underline">
                   Order will be dispatched within 1-2 days
                 </p>
@@ -143,10 +139,8 @@ const SingleProductPage = async ({
 
             <div className="border border-lightColor/25 p-3 flex items-center gap-2.5">
               <CornerDownLeft size={30} className="text-shop_orange" />
-
               <div>
                 <p className="text-base font-semibold">Return Delivery</p>
-
                 <p className="text-sm text-gray-500">
                   Free 30 days Delivery Returns.
                 </p>
@@ -157,7 +151,6 @@ const SingleProductPage = async ({
       </Container>
 
       {/* RELATED PRODUCTS */}
-
       {relatedProducts?.length > 0 && (
         <Container className="py-12">
           <h2 className="text-2xl font-bold mb-6">Related Products</h2>
@@ -171,7 +164,6 @@ const SingleProductPage = async ({
       )}
 
       {/* OTHER PRODUCTS */}
-
       {otherProducts?.length > 0 && (
         <Container className="py-12">
           <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>

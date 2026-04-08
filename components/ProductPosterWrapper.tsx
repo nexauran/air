@@ -4,10 +4,7 @@
 
 import { useState } from "react";
 import PosterSelector from "./PosterSelector";
-import AddToCartButton from "./AddToCartButton";
-import FavoriteButton from "./FavouriteButton";
 
-/* ✅ FINAL Poster Type (TypeScript Safe) */
 interface Poster {
   _id: string;
   title?: string;
@@ -21,117 +18,98 @@ interface Poster {
 }
 
 const ProductPosterWrapper = ({ product }: any) => {
-  const [selectedPosters, setSelectedPosters] = useState<any[]>([]);
+  const [selectedPosters, setSelectedPosters] = useState<Poster[]>([]);
   const [open, setOpen] = useState(false);
+
+  const limit = product?.posterLimit || 3;
 
   return (
     <div className="w-full space-y-4">
       {/* 🔘 Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full px-4 py-3 rounded-xl border bg-white/70 backdrop-blur flex items-center justify-between hover:shadow-md transition"
+        className="w-full px-4 py-3 rounded-xl border bg-white hover:shadow-md flex items-center justify-between transition"
       >
-        <span className="font-medium tracking-tight">
+        <span className="font-medium">
           {selectedPosters.length > 0
             ? `${selectedPosters.length} Posters Selected`
             : "Select Posters"}
         </span>
 
         <span className="text-sm text-gray-500">
-          {selectedPosters.length}/{product?.posterLimit || 3}
+          {selectedPosters.length}/{limit}
         </span>
       </button>
 
-      {/* Buttons Row */}
-      <div className="w-full flex items-center gap-3">
-        <div className="w-12.5 flex justify-center">
-          <FavoriteButton showProduct={true} product={product} />
-        </div>
-
-        <div className="flex-1">
-          <AddToCartButton
-            product={product}
-            selectedPosters={selectedPosters}
-          />
-        </div>
-      </div>
-
-      {/* 💎 Modal */}
+      {/* 💎 MODAL (FIXED VERSION) */}
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-lg flex items-center justify-center"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
+          {/* Modal Box */}
           <div
-            className="bg-white w-[95%] max-w-xl h-[90vh] rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-white/20 flex flex-col overflow-hidden"
+            className="relative w-[95%] max-w-2xl h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
               <h2 className="text-lg font-semibold">
-                Select Posters
+                Select Posters ({selectedPosters.length}/{limit})
               </h2>
+
               <button
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                className="text-xl hover:opacity-70"
               >
                 ✕
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="flex-1 overflow-y-auto p-6">
               <PosterSelector
                 enabled={product?.enablePosterSelection}
-                limit={product?.posterLimit || 3}
+                limit={limit}
                 allowedCategories={
                   product?.allowedCategories?.map((c: any) => c._id) || []
                 }
-
                 onChange={(posters: Poster[]) => {
-                  const cleaned = posters.map((p, index) => {
-                    const name =
+                  const cleaned = posters.map((p, index) => ({
+                    _type: "object",
+                    id: p._id,
+                    name:
                       p.title ||
                       p.name ||
                       p.posterName ||
-                      `Poster ${index + 1}`;
-
-                    return {
-                      _type: "object",
-                      id: p._id,
-                      name: name, // ✅ always valid
-                      image: {
-                        _type: "image",
-                        asset: {
-                          _type: "reference",
-                          _ref: p.image?.asset?._ref,
-                        },
+                      `Poster ${index + 1}`,
+                    image: {
+                      _type: "image",
+                      asset: {
+                        _type: "reference",
+                        _ref: p.image?.asset?._ref,
                       },
-                    };
-                  });
+                    },
+                  }));
 
-                  setSelectedPosters(cleaned);
+                  setSelectedPosters(cleaned as any);
                 }}
               />
             </div>
 
             {/* Footer */}
-            <div className="p-5 border-t bg-white">
+            <div className="p-4 border-t bg-white">
               <button
                 onClick={() => {
-                  if (
-                    selectedPosters.length <
-                    (product?.posterLimit || 3)
-                  ) {
+                  if (selectedPosters.length < limit) {
                     alert("Please select all posters");
                     return;
                   }
-
                   setOpen(false);
                 }}
-                className="w-full py-3 rounded-xl font-semibold text-white bg-black hover:opacity-90"
+                className="w-full py-3 bg-black text-white rounded-xl font-semibold hover:opacity-90"
               >
-                Done ({selectedPosters.length}/{product?.posterLimit || 3})
+                Done ({selectedPosters.length}/{limit})
               </button>
             </div>
           </div>
